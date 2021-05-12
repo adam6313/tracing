@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+package tracing;
+
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+
+option (gogoproto.gostring_all) = true;
+option (gogoproto.marshaler_all) = true;
+option (gogoproto.sizer_all) = true;
+option (gogoproto.unmarshaler_all) = true;
+
+service HelloService {
+  rpc Pin(Request) returns (Response);
+}
+
+
+message Request {
+  string id = 1;
+}
+
+message Response {
+  string id = 1;
+}
