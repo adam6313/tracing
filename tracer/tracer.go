@@ -9,9 +9,8 @@ import (
 )
 
 const (
-	service     = "trace-adam"
+	service     = "demo-service"
 	environment = "production"
-	id          = 1
 )
 
 func TracerProvider(url string) (*tracesdk.TracerProvider, error) {
@@ -28,9 +27,30 @@ func TracerProvider(url string) (*tracesdk.TracerProvider, error) {
 		tracesdk.WithResource(resource.NewWithAttributes(
 			semconv.ServiceNameKey.String(service),
 			attribute.String("environment", environment),
-			attribute.Int64("ID", id),
 		)),
 	)
 
 	return tp, nil
 }
+
+// NewTracing -
+//func NewTracer() {
+//exporter, err := stdout.NewExporter(stdout.WithPrettyPrint())
+//if err != nil {
+//log.Fatal(err)
+//}
+
+//tp := tracesdk.NewTracerProvider(
+//tracesdk.WithSampler(tracesdk.AlwaysSample()),
+//tracesdk.WithSyncer(exporter),
+//tracesdk.WithResource(resource.NewWithAttributes(
+//semconv.ServiceNameKey.String(service),
+//attribute.String("environment", environment),
+//)),
+//)
+//if err != nil {
+//log.Fatal(err)
+//}
+//otel.SetTracerProvider(tp)
+//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+//}
