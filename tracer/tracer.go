@@ -1,15 +1,17 @@
 package tracer
 
 import (
+	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/trace/jaeger"
+	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/resource"
 	tracesdk "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/semconv"
 )
 
 const (
-	service     = "demo-service"
+	service     = "demo-service-adam"
 	environment = "production"
 )
 
@@ -29,6 +31,9 @@ func TracerProvider(url string) (*tracesdk.TracerProvider, error) {
 			attribute.String("environment", environment),
 		)),
 	)
+
+	otel.SetTracerProvider(tp)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	return tp, nil
 }

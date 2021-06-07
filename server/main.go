@@ -67,34 +67,21 @@ func (s *server) Pin(ctx context.Context, in *tracing.Request) (*tracing.Respons
 
 func UnaryServerInterceptor(tp *tracesdk.TracerProvider, opts ...Option) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
+		requestMetadata, _ := metadata.FromOutgoingContext(ctx)
+		metadataCopy := requestMetadata.Copy()
 
-		//requestMetadata, _ := metadata.FromIncomingContext(ctx)
-		//metadataCopy := requestMetadata.Copy()
+		entries, spanCtx := Extract(ctx, &metadataCopy, opts...)
+		ctx = baggage.ContextWithValues(ctx, entries...)
 
-		//entries, spanCtx := Extract(ctx, &metadataCopy, opts...)
-		//ctx = baggage.ContextWithValues(ctx, entries...)
+		name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx), req)
 
-		otel.SetTracerProvider(tp)
-
-		span := trace.SpanFromContext(ctx)
-
-		span.AddEvent("abc", trace.WithAttributes(
-			[]attribute.KeyValue{
-				{
-					Key:   attribute.Key("123"),
-					Value: attribute.BoolValue(true),
-				},
-			}...,
-		))
-
-		//name, attr := spanInfo(info.FullMethod, peerFromCtx(ctx), req)
-
-		//ctx, span := tr.Start(
-		//trace.ContextWithRemoteSpanContext(ctx, spanCtx),
-		//name,
-		//trace.WithSpanKind(trace.SpanKindServer),
-		//trace.WithAttributes(attr...),
-		//)
+		tr := otel.Tracer("ex.com/webserver")
+		ctx, span := tr.Start(
+			trace.ContextWithRemoteSpanContext(ctx, spanCtx),
+			name,
+			trace.WithSpanKind(trace.SpanKindServer),
+			trace.WithAttributes(attr...),
+		)
 		defer span.End()
 
 		resp, err := handler(ctx, req)
@@ -122,7 +109,7 @@ func UnaryClientInterceptor(tp *tracesdk.TracerProvider, opts ...Option) grpc.Un
 		metadataCopy := requestMetadata.Copy()
 
 		name, attr := spanInfo(method, cc.Target(), req)
-		tr := tp.Tracer(method)
+		tr := otel.Tracer("ex.com/webserver")
 		var span trace.Span
 		ctx, span = tr.Start(
 			ctx,

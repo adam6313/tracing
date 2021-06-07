@@ -72,10 +72,30 @@ func main() {
 
 // Ping -
 func Ping(ctx iris.Context) {
+
 	_, err := client.Pin(ctx.Request().Context(), &tracing.Request{Id: "123Adam"})
 	if err != nil {
 		panic(err)
 	}
+
+	//go func(c context.Context) {
+	////tpp, err := tracer.TracerProvider("http://localhost:14268/api/traces")
+	////if err != nil {
+	////panic(err)
+	////}
+
+	//tr := otel.Tracer("ex.com/webserver")
+
+	//newCtx, span := tr.Start(c, "Sub operation...")
+	//ctx.ResetRequest(ctx.Request().WithContext(newCtx))
+
+	//defer span.End()
+
+	//span.AddEvent("Sub span event adkjasklfjsdklfjl;ajfl;ak")
+	//}(ctx.Request().Context())
+
+	//time.Sleep(time.Second * 1)
+
 	ctx.JSON(iris.Map{"response": "pong"})
 
 }
@@ -88,19 +108,19 @@ func ClientInterceptor(tp *tracesdk.TracerProvider) func(ctx iris.Context) {
 		//requestMetadata, _ := metadata.FromOutgoingContext(req.Context())
 		//metadataCopy := requestMetadata.Copy()
 
-		tr := tp.Tracer("helloAdam")
+		tr := otel.Tracer("ex.com/webserver")
 		newCtx, span := tr.Start(
 			req.Context(),
 			req.Host,
 			trace.WithSpanKind(trace.SpanKindClient),
 		)
 
-		req = req.WithContext(newCtx)
+		//req = req.WithContext(newCtx)
+		ctx.ResetRequest(ctx.Request().WithContext(newCtx))
+
+		span.AddEvent("Nice operation!", trace.WithAttributes(attribute.Int("bogons", 100)))
 
 		defer span.End()
-
-		//Inject(req.Context(), &metadataCopy)
-		//newCtx = metadata.NewOutgoingContext(req.Context(), metadataCopy)
 
 		span.SetAttributes([]attribute.KeyValue{
 			{
@@ -120,6 +140,25 @@ func ClientInterceptor(tp *tracesdk.TracerProvider) func(ctx iris.Context) {
 				Value: attribute.IntValue(ctx.GetStatusCode()),
 			},
 		}...)
+
+		//Inject(req.Context(), &metadataCopy)
+		//newCtx = metadata.NewOutgoingContext(req.Context(), metadataCopy)
+
+		//ctx.ResetRequest(ctx.Request().WithContext(newCtx))
+
+		//func(ctx context.Context) {
+		//tpp, err := tracer.TracerProvider("http://localhost:14268/api/traces")
+		//if err != nil {
+		//panic(err)
+		//}
+
+		//tr := tpp.Tracer("helloAdam123456")
+		//var span trace.Span
+		//ctx, span = tr.Start(ctx, "Sub operation...")
+		//defer span.End()
+
+		//span.AddEvent("Sub span event adkjasklfjsdklfjl;ajfl;ak")
+		//}(ctx.Request().Context())
 
 		ctx.Next()
 	}
